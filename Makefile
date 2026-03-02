@@ -1,4 +1,4 @@
-DRAFT = draft-zhou-sns-00
+DRAFT = draft-zhou-dvs-00
 SHELL = /bin/bash
 
 # Source chruby to find kramdown-rfc installed under ruby 3.3.0
