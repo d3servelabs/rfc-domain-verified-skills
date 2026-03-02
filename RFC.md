@@ -1,4 +1,3 @@
-```
 Internet-Draft                                                Z. V. Zhou
 Intended status: Proposed Standard                               Namefi
 Expires: September 2026                                     March 2026
@@ -10,11 +9,12 @@ Abstract
 
    This document defines the Simple Named Skills (SNS) protocol, a
    lightweight mechanism for AI Agents to discover, verify, and execute
-   skill definitions served as Markdown files over HTTPS.  The protocol
-   leverages the existing trust infrastructure of the Domain Name System
-   (DNS) and Transport Layer Security (TLS) to establish skill identity
-   and authenticity, eliminating the need for centralized skill
-   registries.
+   skill definitions served over HTTPS.  A skill is a directory
+   containing a SKILL.md entry point and optional bundled resources.
+   The protocol leverages the existing trust infrastructure of the
+   Domain Name System (DNS) and Transport Layer Security (TLS) to
+   establish skill identity and authenticity, eliminating the need for
+   centralized skill registries.
 
 Status of This Memo
 
@@ -33,28 +33,34 @@ Table of Contents
      3.1.  Identity and Trust  . . . . . . . . . . . . . . . . . .  2
      3.2.  Discovery . . . . . . . . . . . . . . . . . . . . . . .  3
    4.  Skill Specification . . . . . . . . . . . . . . . . . . . .  3
-     4.1.  File Format . . . . . . . . . . . . . . . . . . . . . .  3
-     4.2.  Metadata  . . . . . . . . . . . . . . . . . . . . . . .  3
-     4.3.  Instructions  . . . . . . . . . . . . . . . . . . . . .  4
-     4.4.  Assets  . . . . . . . . . . . . . . . . . . . . . . . .  4
-   5.  Security and Permissions  . . . . . . . . . . . . . . . . .  4
-     5.1.  Same-Origin Isolation . . . . . . . . . . . . . . . . .  4
-     5.2.  Explicit Consent  . . . . . . . . . . . . . . . . . . .  5
-     5.3.  DNSSEC  . . . . . . . . . . . . . . . . . . . . . . . .  5
-   6.  Composition . . . . . . . . . . . . . . . . . . . . . . . .  5
-   7.  Security Considerations . . . . . . . . . . . . . . . . . .  5
-   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . .  6
-   9.  References  . . . . . . . . . . . . . . . . . . . . . . . .  6
-     9.1.  Normative References  . . . . . . . . . . . . . . . . .  6
-     9.2.  Informative References  . . . . . . . . . . . . . . . .  6
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . .  6
+     4.1.  Directory Structure . . . . . . . . . . . . . . . . . .  3
+     4.2.  SKILL.md Entry Point  . . . . . . . . . . . . . . . . .  4
+     4.3.  Metadata (Frontmatter)  . . . . . . . . . . . . . . . .  4
+     4.4.  Instructions (Body) . . . . . . . . . . . . . . . . . .  5
+     4.5.  Bundled Resources . . . . . . . . . . . . . . . . . . .  5
+       4.5.1.  Additional Instructions . . . . . . . . . . . . . .  5
+       4.5.2.  Executable Scripts  . . . . . . . . . . . . . . . .  5
+       4.5.3.  Data and Reference Materials  . . . . . . . . . . .  6
+     4.6.  Progressive Loading . . . . . . . . . . . . . . . . . .  6
+   5.  Security and Permissions  . . . . . . . . . . . . . . . . .  7
+     5.1.  Same-Origin Isolation . . . . . . . . . . . . . . . . .  7
+     5.2.  Explicit Consent  . . . . . . . . . . . . . . . . . . .  7
+     5.3.  DNSSEC  . . . . . . . . . . . . . . . . . . . . . . . .  8
+   6.  Composition . . . . . . . . . . . . . . . . . . . . . . . .  8
+   7.  Security Considerations . . . . . . . . . . . . . . . . . .  8
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . .  9
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . .  9
+     9.1.  Normative References  . . . . . . . . . . . . . . . . .  9
+     9.2.  Informative References  . . . . . . . . . . . . . . . . 10
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . 10
 
 
 1.  Introduction
 
-   Current AI Agent skills (such as those in the Claude Agentic Skill
-   Protocol) are primarily distributed via centralized code repositories
-   like GitHub.  This creates several friction points:
+   Current AI Agent skills (such as those in the Claude Agent Skills
+   protocol [CLAUDE-SKILLS]) are primarily distributed via centralized
+   code repositories or platform-specific upload mechanisms.  This
+   creates several friction points:
 
    o  Identity Ambiguity: Users cannot easily verify if a skill hosted
       on a third-party platform genuinely belongs to a brand.
@@ -71,6 +77,12 @@ Table of Contents
    directly from a brand's domain, we leverage the existing global trust
    of the DNS and HTTPS infrastructure.
 
+   This protocol is designed to be compatible with existing skill
+   formats.  In particular, a skill directory conforming to SNS can be
+   directly consumed by any agent that understands the SKILL.md
+   convention, while also gaining the identity and trust properties
+   conferred by domain-based hosting.
+
 2.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -81,18 +93,28 @@ Table of Contents
 
    The following terms are used in this document:
 
-   Skill:  A set of instructions, encoded as a Markdown file, that
-      directs an AI Agent to perform a specific task or adopt a specific
-      behavior.
+   Skill:  A directory containing a SKILL.md entry point and optional
+      bundled resources (scripts, templates, data files, additional
+      instructions) that directs an AI Agent to perform a specific task
+      or adopt a specific behavior.
+
+   SKILL.md:  The mandatory Markdown entry-point file within a skill
+      directory.  It contains YAML frontmatter metadata and human-
+      readable instructions for the Agent.
 
    Agent:  An AI system capable of fetching, interpreting, and executing
       Skill instructions.
 
-   Skill URL:  The HTTPS URL from which a Skill is served.  This URL
-      serves as the globally unique identifier of the Skill.
+   Skill URL:  The HTTPS URL of the skill directory (or its SKILL.md
+      entry point).  This URL serves as the globally unique identifier
+      of the Skill.
 
    Hosting Domain:  The domain component of the Skill URL, considered
       the authoritative endorser of the Skill.
+
+   Bundled Resource:  Any file within the skill directory other than
+      SKILL.md, including additional instruction files, executable
+      scripts, templates, schemas, and data files.
 
 3.  Core Protocol
 
@@ -105,18 +127,18 @@ Table of Contents
 
    The hosting domain is considered the authoritative endorser of the
    skill.  A skill served from "https://example.com/.well-known/
-   skills/assistant.md" is attributed to and endorsed by the operator of
-   "example.com".
+   skills/customer-support/SKILL.md" is attributed to and endorsed by
+   the operator of "example.com".
 
 3.2.  Discovery
 
    Skills MAY be hosted at any valid URL path on a domain (e.g.,
-   "https://example.com/my-assistant.md").
+   "https://example.com/skills/my-assistant/SKILL.md").
 
    Official brand skills SHOULD be served from the well-known path
    prefix:
 
-      /.well-known/skills/
+      /.well-known/skills/{skill-name}/SKILL.md
 
    This follows the conventions established by [RFC8615] for well-known
    URIs.
@@ -126,54 +148,168 @@ Table of Contents
    check for skill entries in the sitemap when exploring a domain's
    available skills.
 
+   A domain MAY serve a skill index document at:
+
+      /.well-known/skills/index.json
+
+   The index document, if present, SHOULD contain an array of objects,
+   each with "name", "description", and "path" fields pointing to
+   available skills on the domain.
+
 4.  Skill Specification
 
-4.1.  File Format
+4.1.  Directory Structure
 
-   A Simple Named Skill is a single Markdown file with the ".md" file
-   extension, served with the media type "text/markdown" [RFC7763].
+   A Simple Named Skill is a directory containing at minimum a SKILL.md
+   file.  The directory MAY contain additional files organized by
+   purpose:
 
-4.2.  Metadata
+      my-skill/
+      +-- SKILL.md              (entry point - REQUIRED)
+      +-- ADVANCED.md           (additional instructions - OPTIONAL)
+      +-- REFERENCE.md          (detailed reference docs - OPTIONAL)
+      +-- scripts/
+      |   +-- process.py        (executable script - OPTIONAL)
+      |   +-- validate.sh       (executable script - OPTIONAL)
+      +-- templates/
+      |   +-- report.html       (template file - OPTIONAL)
+      +-- data/
+          +-- schema.json       (data/reference file - OPTIONAL)
 
-   Skill files MUST begin with a YAML frontmatter block delimited by
-   "---" lines.  The frontmatter MUST contain the following fields:
+   When served over HTTPS, the directory structure is represented by
+   URL paths relative to the skill's base URL.  For example, a skill
+   at "https://example.com/.well-known/skills/my-skill/" would have
+   its entry point at:
+
+      https://example.com/.well-known/skills/my-skill/SKILL.md
+
+   And a bundled script at:
+
+      https://example.com/.well-known/skills/my-skill/scripts/process.py
+
+4.2.  SKILL.md Entry Point
+
+   Every skill directory MUST contain a file named "SKILL.md".  This
+   file MUST be encoded in UTF-8 and served with the media type
+   "text/markdown" [RFC7763].
+
+   The file consists of two parts:
+
+   1. YAML frontmatter (metadata) - REQUIRED
+   2. Markdown body (instructions) - REQUIRED
+
+4.3.  Metadata (Frontmatter)
+
+   SKILL.md files MUST begin with a YAML frontmatter block delimited
+   by "---" lines.  The frontmatter MUST contain the following fields:
 
    name:  A short, human-readable name for the skill.
 
+      o  MUST NOT exceed 64 characters.
+      o  MUST contain only lowercase letters, numbers, and hyphens.
+
    description:  A brief description of the skill's purpose and
-      capabilities.
+      capabilities, including guidance on when an Agent should trigger
+      the skill.
+
+      o  MUST NOT be empty.
+      o  MUST NOT exceed 1024 characters.
 
    Example:
 
       ---
       name: customer-support
       description: Handles common customer support inquiries for
-        Acme Corp products.
+        Acme Corp products. Use when the user asks about product
+        returns, warranty claims, or order status.
       ---
 
-4.3.  Instructions
+4.4.  Instructions (Body)
 
-   The body of the Markdown file, following the frontmatter, MUST
-   contain human-readable instructions for the Agent.  These
-   instructions define the behavior, constraints, and capabilities
-   of the skill.
+   The body of SKILL.md, following the frontmatter, MUST contain
+   human-readable instructions for the Agent.  These instructions
+   define the behavior, constraints, and capabilities of the skill.
 
-4.4.  Assets
+   Instructions SHOULD be written as clear, step-by-step procedural
+   guidance.  They MAY reference bundled resources using relative URLs
+   (e.g., "[see advanced guide](ADVANCED.md)" or "run the script at
+   scripts/process.py").
 
-   Skills MAY reference supplementary assets (e.g., shell scripts,
-   templates, data files) via relative or absolute URLs.  Referenced
-   assets MUST reside within the same origin as the skill file itself,
-   in accordance with the Same-Origin Isolation requirement defined in
-   Section 5.1.
+4.5.  Bundled Resources
+
+   Skills MAY include additional files alongside SKILL.md.  These
+   bundled resources fall into three categories:
+
+4.5.1.  Additional Instructions
+
+   Additional Markdown files (e.g., ADVANCED.md, REFERENCE.md,
+   FORMS.md) provide specialized guidance, detailed API references,
+   or extended workflows.  These files:
+
+   o  SHOULD use the ".md" extension and "text/markdown" media type.
+   o  Are loaded by the Agent only when referenced from SKILL.md or
+      when the task context requires them.
+
+4.5.2.  Executable Scripts
+
+   Scripts (e.g., Python, Shell, JavaScript) provide deterministic
+   operations that the Agent can execute.  These files:
+
+   o  MUST reside within the same skill directory (same-origin).
+   o  Are executed by the Agent via its runtime environment; only the
+      script's output enters the Agent's context, not the script
+      source code itself.
+   o  MUST be subject to the Explicit Consent requirement defined in
+      Section 5.2 before execution.
+
+4.5.3.  Data and Reference Materials
+
+   Data files (e.g., JSON schemas, CSV datasets, configuration
+   templates, API documentation) provide factual lookup material.
+   These files:
+
+   o  MUST reside within the same skill directory (same-origin).
+   o  Are read by the Agent on demand when the task requires specific
+      reference information.
+   o  Impose no context cost until actually accessed.
+
+4.6.  Progressive Loading
+
+   Agents implementing SNS SHOULD employ a progressive loading strategy
+   to manage context efficiently:
+
+   Level 1 - Metadata (always loaded):  The YAML frontmatter (name
+      and description) is loaded at agent startup or skill registration
+      time.  This enables skill discovery with minimal token cost
+      (approximately 100 tokens per skill).
+
+   Level 2 - Instructions (loaded on trigger):  The body of SKILL.md
+      is fetched and loaded into the agent's context only when the
+      skill is triggered by a matching user request.
+
+   Level 3 - Resources (loaded as needed):  Bundled resources
+      (additional markdown files, scripts, data files) are accessed
+      only when referenced during execution.  Scripts are executed
+      and only their output is loaded into context.
+
+   This three-level approach ensures that a domain can publish many
+   skills without imposing context overhead on agents, as only the
+   metadata of registered skills is persistently loaded.
 
 5.  Security and Permissions
 
 5.1.  Same-Origin Isolation
 
    Agents MUST restrict a skill's automated access to resources within
-   its hosting domain (same-origin policy).  A skill served from
-   "https://example.com" MUST NOT be permitted to automatically access
-   resources on "https://other.com" without explicit user consent.
+   its hosting domain and skill directory (same-origin policy).  A
+   skill served from "https://example.com" MUST NOT be permitted to
+   automatically access resources on "https://other.com" without
+   explicit user consent.
+
+   Bundled resources (scripts, data files, templates) referenced by a
+   skill MUST reside within the same origin as the SKILL.md file.
+   Agents MUST reject references to resources outside the skill's
+   origin unless the user explicitly approves cross-origin access.
 
    This prevents a compromised or malicious skill from leveraging its
    trusted domain context to exfiltrate data from, or perform actions
@@ -184,7 +320,7 @@ Table of Contents
    Agents MUST display the source domain to the user and request
    explicit confirmation before executing any non-textual instructions
    contained in a skill (e.g., shell commands, API calls, file system
-   operations).
+   operations, running bundled scripts).
 
    The consent prompt SHOULD clearly indicate:
 
@@ -193,6 +329,10 @@ Table of Contents
    o  A description of the action to be performed.
 
    o  Any resources that will be accessed or modified.
+
+   Textual instructions (Markdown content) MAY be loaded without
+   additional consent beyond the initial skill activation.  Executable
+   content (scripts, commands) MUST always require explicit consent.
 
 5.3.  DNSSEC
 
@@ -211,6 +351,10 @@ Table of Contents
    security policies.  Agents MUST apply the Same-Origin Isolation
    policy (Section 5.1) independently to each loaded skill based on
    its own hosting domain.
+
+   When composing skills across domains, agents SHOULD clearly
+   communicate to the user that the trust context is being extended
+   to additional domains.
 
 7.  Security Considerations
 
@@ -235,6 +379,18 @@ Table of Contents
    o  Transitive trust in composition: When skills reference other
       skills (Section 6), the trust chain extends across domains.
       Agents should clearly communicate this to users.
+
+   o  Script execution: Bundled scripts execute with the permissions
+      of the agent's runtime environment.  Malicious scripts could
+      perform unauthorized file access, network calls, or data
+      exfiltration.  The Explicit Consent requirement (Section 5.2)
+      mitigates this risk, but agents SHOULD also sandbox script
+      execution where possible.
+
+   o  External resource fetching: Skills that instruct agents to fetch
+      data from external URLs pose particular risk, as fetched content
+      may contain malicious instructions.  Agents SHOULD treat
+      externally-fetched content as untrusted.
 
 8.  IANA Considerations
 
@@ -275,6 +431,11 @@ Table of Contents
 
 9.2.  Informative References
 
+   [CLAUDE-SKILLS]
+              Anthropic, "Agent Skills Overview",
+              <https://platform.claude.com/docs/en/agents-and-tools/
+              agent-skills/overview>.
+
    [SITEMAP]  Sitemaps.org, "Sitemaps XML Format",
               <https://www.sitemaps.org/protocol.html>.
 
@@ -283,4 +444,3 @@ Author's Address
    Zainan Victor Zhou
    Namefi
    Email: zzn@namefi.io
-```
