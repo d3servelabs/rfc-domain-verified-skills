@@ -215,12 +215,10 @@ description:
 Example:
 
 ~~~
----
 name: customer-support
 description: Handles common customer support inquiries for
   Acme Corp products. Use when the user asks about product
   returns, warranty claims, or order status.
----
 ~~~
 
 ## Instructions (Body)

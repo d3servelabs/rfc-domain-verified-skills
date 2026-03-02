@@ -43,12 +43,6 @@ Domain Name System (DNS) and Transport Layer Security (TLS) to
 establish skill identity and authenticity, eliminating the need for
 centralized skill registries.</t>
 
-<?line 236?>
-<t>name: customer-support
-description: Handles common customer support inquiries for
-  Acme Corp products. Use when the user asks about product
-  returns, warranty claims, or order status.</t>
-
 
 
     </abstract>
@@ -264,9 +258,226 @@ the skill.
 
 <t>Example:</t>
 
-<t>~~~</t>
+<figure><artwork><![CDATA[
+name: customer-support
+description: Handles common customer support inquiries for
+  Acme Corp products. Use when the user asks about product
+  returns, warranty claims, or order status.
+]]></artwork></figure>
 
 </section>
+<section anchor="instructions-body"><name>Instructions (Body)</name>
+
+<t>The body of SKILL.md, following the frontmatter, <bcp14>MUST</bcp14> contain
+human-readable instructions for the Agent.  These instructions
+define the behavior, constraints, and capabilities of the skill.</t>
+
+<t>Instructions <bcp14>SHOULD</bcp14> be written as clear, step-by-step procedural
+guidance.  They <bcp14>MAY</bcp14> reference bundled resources using relative URLs
+(e.g., <spanx style="verb">[see advanced guide](ADVANCED.md)</spanx> or <spanx style="verb">run the script at
+scripts/process.py</spanx>).</t>
+
+</section>
+<section anchor="bundled-resources"><name>Bundled Resources</name>
+
+<t>Skills <bcp14>MAY</bcp14> include additional files alongside SKILL.md.  These
+bundled resources fall into three categories:</t>
+
+<section anchor="additional-instructions"><name>Additional Instructions</name>
+
+<t>Additional Markdown files (e.g., ADVANCED.md, REFERENCE.md,
+FORMS.md) provide specialized guidance, detailed API references,
+or extended workflows.  These files:</t>
+
+<t><list style="symbols">
+  <t><bcp14>SHOULD</bcp14> use the <spanx style="verb">.md</spanx> extension and <spanx style="verb">text/markdown</spanx> media type.</t>
+  <t>Are loaded by the Agent only when referenced from SKILL.md or
+when the task context requires them.</t>
+</list></t>
+
+</section>
+<section anchor="executable-scripts"><name>Executable Scripts</name>
+
+<t>Scripts (e.g., Python, Shell, JavaScript) provide deterministic
+operations that the Agent can execute.  These files:</t>
+
+<t><list style="symbols">
+  <t><bcp14>MUST</bcp14> reside within the same skill directory (same-origin).</t>
+  <t>Are executed by the Agent via its runtime environment; only the
+script's output enters the Agent's context, not the script
+source code itself.</t>
+  <t><bcp14>MUST</bcp14> be subject to the Explicit Consent requirement defined in
+<xref target="explicit-consent"/> before execution.</t>
+</list></t>
+
+</section>
+<section anchor="data-and-reference-materials"><name>Data and Reference Materials</name>
+
+<t>Data files (e.g., JSON schemas, CSV datasets, configuration
+templates, API documentation) provide factual lookup material.
+These files:</t>
+
+<t><list style="symbols">
+  <t><bcp14>MUST</bcp14> reside within the same skill directory (same-origin).</t>
+  <t>Are read by the Agent on demand when the task requires specific
+reference information.</t>
+  <t>Impose no context cost until actually accessed.</t>
+</list></t>
+
+</section>
+</section>
+<section anchor="progressive-loading"><name>Progressive Loading</name>
+
+<t>Agents implementing SNS <bcp14>SHOULD</bcp14> employ a progressive loading strategy
+to manage context efficiently:</t>
+
+<dl>
+  <dt>Level 1 - Metadata (always loaded):</dt>
+  <dd>
+    <t>The YAML frontmatter (name and description) is loaded at agent
+startup or skill registration time.  This enables skill discovery
+with minimal token cost (approximately 100 tokens per skill).</t>
+  </dd>
+  <dt>Level 2 - Instructions (loaded on trigger):</dt>
+  <dd>
+    <t>The body of SKILL.md is fetched and loaded into the agent's
+context only when the skill is triggered by a matching user
+request.</t>
+  </dd>
+  <dt>Level 3 - Resources (loaded as needed):</dt>
+  <dd>
+    <t>Bundled resources (additional markdown files, scripts, data
+files) are accessed only when referenced during execution.
+Scripts are executed and only their output is loaded into context.</t>
+  </dd>
+</dl>
+
+<t>This three-level approach ensures that a domain can publish many
+skills without imposing context overhead on agents, as only the
+metadata of registered skills is persistently loaded.</t>
+
+</section>
+</section>
+<section anchor="security-and-permissions"><name>Security and Permissions</name>
+
+<section anchor="same-origin-isolation"><name>Same-Origin Isolation</name>
+
+<t>Agents <bcp14>MUST</bcp14> restrict a skill's automated access to resources within
+its hosting domain and skill directory (same-origin policy).  A
+skill served from <spanx style="verb">https://example.com</spanx> <bcp14>MUST NOT</bcp14> be permitted to
+automatically access resources on <spanx style="verb">https://other.com</spanx> without
+explicit user consent.</t>
+
+<t>Bundled resources (scripts, data files, templates) referenced by a
+skill <bcp14>MUST</bcp14> reside within the same origin as the SKILL.md file.
+Agents <bcp14>MUST</bcp14> reject references to resources outside the skill's
+origin unless the user explicitly approves cross-origin access.</t>
+
+<t>This prevents a compromised or malicious skill from leveraging its
+trusted domain context to exfiltrate data from, or perform actions
+on, unrelated origins.</t>
+
+</section>
+<section anchor="explicit-consent"><name>Explicit Consent</name>
+
+<t>Agents <bcp14>MUST</bcp14> display the source domain to the user and request
+explicit confirmation before executing any non-textual instructions
+contained in a skill (e.g., shell commands, API calls, file system
+operations, running bundled scripts).</t>
+
+<t>The consent prompt <bcp14>SHOULD</bcp14> clearly indicate:</t>
+
+<t><list style="symbols">
+  <t>The hosting domain of the skill.</t>
+  <t>A description of the action to be performed.</t>
+  <t>Any resources that will be accessed or modified.</t>
+</list></t>
+
+<t>Textual instructions (Markdown content) <bcp14>MAY</bcp14> be loaded without
+additional consent beyond the initial skill activation.  Executable
+content (scripts, commands) <bcp14>MUST</bcp14> always require explicit consent.</t>
+
+</section>
+<section anchor="dnssec"><name>DNSSEC</name>
+
+<t>Domain operators <bcp14>SHOULD</bcp14> deploy DNSSEC <xref target="RFC4033"/> to prevent DNS
+spoofing attacks that could redirect agents to malicious skill
+files hosted on attacker-controlled infrastructure.</t>
+
+</section>
+</section>
+<section anchor="composition"><name>Composition</name>
+
+<t>A skill <bcp14>MAY</bcp14> reference other skills via their full HTTPS URLs.  When
+an Agent encounters a referenced skill URL during execution, it
+<bcp14>SHOULD</bcp14> dynamically fetch and load the referenced skill if the current
+context requires the extended capabilities it provides.</t>
+
+<t>Each referenced skill is subject to its own origin's trust and
+security policies.  Agents <bcp14>MUST</bcp14> apply the Same-Origin Isolation
+policy (<xref target="same-origin-isolation"/>) independently to each loaded skill
+based on its own hosting domain.</t>
+
+<t>When composing skills across domains, agents <bcp14>SHOULD</bcp14> clearly
+communicate to the user that the trust context is being extended
+to additional domains.</t>
+
+</section>
+<section anchor="security-considerations"><name>Security Considerations</name>
+
+<t>The primary security property of this protocol is that trust is
+anchored to domain ownership.  This inherits both the strengths and
+weaknesses of the existing Web PKI and DNS infrastructure.</t>
+
+<t>Skill spoofing is mitigated by the HTTPS requirement, which ensures
+that only the legitimate operator of a domain can serve skills from
+that domain.  DNSSEC (<xref target="dnssec"/>) provides an additional layer of
+protection against DNS-level attacks.</t>
+
+<t>Agents implementing this protocol should be aware of the following
+risks:</t>
+
+<t><list style="symbols">
+  <t>Domain compromise: If a domain is compromised, all skills served
+from it should be considered compromised.</t>
+  <t>Subdomain delegation: Skills on subdomains should be treated as
+distinct trust contexts from the parent domain.</t>
+  <t>Transitive trust in composition: When skills reference other
+skills (<xref target="composition"/>), the trust chain extends across domains.
+Agents should clearly communicate this to users.</t>
+  <t>Script execution: Bundled scripts execute with the permissions
+of the agent's runtime environment.  Malicious scripts could
+perform unauthorized file access, network calls, or data
+exfiltration.  The Explicit Consent requirement (<xref target="explicit-consent"/>)
+mitigates this risk, but agents <bcp14>SHOULD</bcp14> also sandbox script
+execution where possible.</t>
+  <t>External resource fetching: Skills that instruct agents to fetch
+data from external URLs pose particular risk, as fetched content
+may contain malicious instructions.  Agents <bcp14>SHOULD</bcp14> treat
+externally-fetched content as untrusted.</t>
+</list></t>
+
+</section>
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+
+<t>This document requests registration of the well-known URI suffix
+<spanx style="verb">skills</spanx> in the "Well-Known URIs" registry established by <xref target="RFC8615"/>.</t>
+
+<dl>
+  <dt>URI suffix:</dt>
+  <dd>
+    <t>skills</t>
+  </dd>
+  <dt>Change controller:</dt>
+  <dd>
+    <t>Namefi</t>
+  </dd>
+  <dt>Specification document:</dt>
+  <dd>
+    <t>This document (<xref target="discovery"/>)</t>
+  </dd>
+</dl>
+
 </section>
 
 
@@ -402,7 +613,7 @@ the skill.
 </references>
 
 
-<?line 425?>
+<?line 423?>
 
 <section numbered="false" anchor="acknowledgments"><name>Acknowledgments</name>
 
@@ -416,130 +627,130 @@ discussions that informed this protocol design.</t>
 
 <!-- ##markdown-source:
 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
-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
+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
 
 -->
 

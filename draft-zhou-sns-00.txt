@@ -22,10 +22,6 @@ Abstract
    establish skill identity and authenticity, eliminating the need for
    centralized skill registries.
 
-   name: customer-support description: Handles common customer support
-   inquiries for Acme Corp products.  Use when the user asks about
-   product returns, warranty claims, or order status.
-
 Status of This Memo
 
    This Internet-Draft is submitted in full conformance with the
@@ -48,7 +44,11 @@ Copyright Notice
    Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
-
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.
 
 
 
@@ -58,28 +58,35 @@ Zhou                    Expires 3 September 2026                [Page 1]
 Internet-Draft                     SNS                        March 2026
 
 
-   This document is subject to BCP 78 and the IETF Trust's Legal
-   Provisions Relating to IETF Documents (https://trustee.ietf.org/
-   license-info) in effect on the date of publication of this document.
-   Please review these documents carefully, as they describe your rights
-   and restrictions with respect to this document.
-
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   3
    3.  Core Protocol . . . . . . . . . . . . . . . . . . . . . . . .   3
-     3.1.  Identity and Trust  . . . . . . . . . . . . . . . . . . .   3
+     3.1.  Identity and Trust  . . . . . . . . . . . . . . . . . . .   4
      3.2.  Discovery . . . . . . . . . . . . . . . . . . . . . . . .   4
    4.  Skill Specification . . . . . . . . . . . . . . . . . . . . .   4
      4.1.  Directory Structure . . . . . . . . . . . . . . . . . . .   4
      4.2.  SKILL.md Entry Point  . . . . . . . . . . . . . . . . . .   5
      4.3.  Metadata (Frontmatter)  . . . . . . . . . . . . . . . . .   5
-   5.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   6
-     5.1.  Normative References  . . . . . . . . . . . . . . . . . .   6
-     5.2.  Informative References  . . . . . . . . . . . . . . . . .   6
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .   7
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   7
+     4.4.  Instructions (Body) . . . . . . . . . . . . . . . . . . .   6
+     4.5.  Bundled Resources . . . . . . . . . . . . . . . . . . . .   6
+       4.5.1.  Additional Instructions . . . . . . . . . . . . . . .   6
+       4.5.2.  Executable Scripts  . . . . . . . . . . . . . . . . .   6
+       4.5.3.  Data and Reference Materials  . . . . . . . . . . . .   7
+     4.6.  Progressive Loading . . . . . . . . . . . . . . . . . . .   7
+   5.  Security and Permissions  . . . . . . . . . . . . . . . . . .   7
+     5.1.  Same-Origin Isolation . . . . . . . . . . . . . . . . . .   7
+     5.2.  Explicit Consent  . . . . . . . . . . . . . . . . . . . .   8
+     5.3.  DNSSEC  . . . . . . . . . . . . . . . . . . . . . . . . .   8
+   6.  Composition . . . . . . . . . . . . . . . . . . . . . . . . .   8
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
+     9.2.  Informative References  . . . . . . . . . . . . . . . . .  10
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  11
 
 1.  Introduction
 
@@ -98,13 +105,6 @@ Table of Contents
    *  Security Risks: Malicious skills can spoof brand names on open
       platforms to exfiltrate data.
 
-   The Simple Named Skills (SNS) protocol returns to the fundamental
-   logic of the Web: the Domain is the Identity.  By serving skills
-   directly from a brand's domain, we leverage the existing global trust
-   of the DNS and HTTPS infrastructure.
-
-
-
 
 
 
@@ -113,6 +113,11 @@ Zhou                    Expires 3 September 2026                [Page 2]
 
 Internet-Draft                     SNS                        March 2026
 
+
+   The Simple Named Skills (SNS) protocol returns to the fundamental
+   logic of the Web: the Domain is the Identity.  By serving skills
+   directly from a brand's domain, we leverage the existing global trust
+   of the DNS and HTTPS infrastructure.
 
    This protocol is designed to be compatible with existing skill
    formats.  In particular, a skill directory conforming to SNS can be
@@ -157,11 +162,6 @@ Internet-Draft                     SNS                        March 2026
 
    The identity of a skill is defined strictly by its HTTPS URL.
 
-3.1.  Identity and Trust
-
-   Skills MUST be served via HTTPS [RFC9110].  Agents MUST NOT fetch or
-   execute skills served over plain HTTP.
-
 
 
 
@@ -169,6 +169,11 @@ Zhou                    Expires 3 September 2026                [Page 3]
 
 Internet-Draft                     SNS                        March 2026
 
+
+3.1.  Identity and Trust
+
+   Skills MUST be served via HTTPS [RFC9110].  Agents MUST NOT fetch or
+   execute skills served over plain HTTP.
 
    The hosting domain is considered the authoritative endorser of the
    skill.  A skill served from https://example.com/.well-known/skills/
@@ -208,11 +213,6 @@ Internet-Draft                     SNS                        March 2026
    A Simple Named Skill is a directory containing at minimum a SKILL.md
    file.  The directory MAY contain additional files organized by
    purpose:
-
-
-
-
-
 
 
 
@@ -284,11 +284,233 @@ Internet-Draft                     SNS                        March 2026
 
    Example:
 
-   ~~~
+   name: customer-support
+   description: Handles common customer support inquiries for
+     Acme Corp products. Use when the user asks about product
+     returns, warranty claims, or order status.
 
-5.  References
+4.4.  Instructions (Body)
 
-5.1.  Normative References
+   The body of SKILL.md, following the frontmatter, MUST contain human-
+   readable instructions for the Agent.  These instructions define the
+   behavior, constraints, and capabilities of the skill.
+
+   Instructions SHOULD be written as clear, step-by-step procedural
+   guidance.  They MAY reference bundled resources using relative URLs
+   (e.g., [see advanced guide](ADVANCED.md) or run the script at
+   scripts/process.py).
+
+4.5.  Bundled Resources
+
+   Skills MAY include additional files alongside SKILL.md.  These
+   bundled resources fall into three categories:
+
+4.5.1.  Additional Instructions
+
+   Additional Markdown files (e.g., ADVANCED.md, REFERENCE.md, FORMS.md)
+   provide specialized guidance, detailed API references, or extended
+   workflows.  These files:
+
+   *  SHOULD use the .md extension and text/markdown media type.
+
+   *  Are loaded by the Agent only when referenced from SKILL.md or when
+      the task context requires them.
+
+4.5.2.  Executable Scripts
+
+   Scripts (e.g., Python, Shell, JavaScript) provide deterministic
+   operations that the Agent can execute.  These files:
+
+   *  MUST reside within the same skill directory (same-origin).
+
+   *  Are executed by the Agent via its runtime environment; only the
+      script's output enters the Agent's context, not the script source
+      code itself.
+
+   *  MUST be subject to the Explicit Consent requirement defined in
+      Section 5.2 before execution.
+
+
+
+
+Zhou                    Expires 3 September 2026                [Page 6]
+
+Internet-Draft                     SNS                        March 2026
+
+
+4.5.3.  Data and Reference Materials
+
+   Data files (e.g., JSON schemas, CSV datasets, configuration
+   templates, API documentation) provide factual lookup material.  These
+   files:
+
+   *  MUST reside within the same skill directory (same-origin).
+
+   *  Are read by the Agent on demand when the task requires specific
+      reference information.
+
+   *  Impose no context cost until actually accessed.
+
+4.6.  Progressive Loading
+
+   Agents implementing SNS SHOULD employ a progressive loading strategy
+   to manage context efficiently:
+
+   Level 1 - Metadata (always loaded):  The YAML frontmatter (name and
+      description) is loaded at agent startup or skill registration
+      time.  This enables skill discovery with minimal token cost
+      (approximately 100 tokens per skill).
+
+   Level 2 - Instructions (loaded on trigger):  The body of SKILL.md is
+      fetched and loaded into the agent's context only when the skill is
+      triggered by a matching user request.
+
+   Level 3 - Resources (loaded as needed):  Bundled resources
+      (additional markdown files, scripts, data files) are accessed only
+      when referenced during execution.  Scripts are executed and only
+      their output is loaded into context.
+
+   This three-level approach ensures that a domain can publish many
+   skills without imposing context overhead on agents, as only the
+   metadata of registered skills is persistently loaded.
+
+5.  Security and Permissions
+
+5.1.  Same-Origin Isolation
+
+   Agents MUST restrict a skill's automated access to resources within
+   its hosting domain and skill directory (same-origin policy).  A skill
+   served from https://example.com MUST NOT be permitted to
+   automatically access resources on https://other.com without explicit
+   user consent.
+
+
+
+
+
+
+Zhou                    Expires 3 September 2026                [Page 7]
+
+Internet-Draft                     SNS                        March 2026
+
+
+   Bundled resources (scripts, data files, templates) referenced by a
+   skill MUST reside within the same origin as the SKILL.md file.
+   Agents MUST reject references to resources outside the skill's origin
+   unless the user explicitly approves cross-origin access.
+
+   This prevents a compromised or malicious skill from leveraging its
+   trusted domain context to exfiltrate data from, or perform actions
+   on, unrelated origins.
+
+5.2.  Explicit Consent
+
+   Agents MUST display the source domain to the user and request
+   explicit confirmation before executing any non-textual instructions
+   contained in a skill (e.g., shell commands, API calls, file system
+   operations, running bundled scripts).
+
+   The consent prompt SHOULD clearly indicate:
+
+   *  The hosting domain of the skill.
+
+   *  A description of the action to be performed.
+
+   *  Any resources that will be accessed or modified.
+
+   Textual instructions (Markdown content) MAY be loaded without
+   additional consent beyond the initial skill activation.  Executable
+   content (scripts, commands) MUST always require explicit consent.
+
+5.3.  DNSSEC
+
+   Domain operators SHOULD deploy DNSSEC [RFC4033] to prevent DNS
+   spoofing attacks that could redirect agents to malicious skill files
+   hosted on attacker-controlled infrastructure.
+
+6.  Composition
+
+   A skill MAY reference other skills via their full HTTPS URLs.  When
+   an Agent encounters a referenced skill URL during execution, it
+   SHOULD dynamically fetch and load the referenced skill if the current
+   context requires the extended capabilities it provides.
+
+   Each referenced skill is subject to its own origin's trust and
+   security policies.  Agents MUST apply the Same-Origin Isolation
+   policy (Section 5.1) independently to each loaded skill based on its
+   own hosting domain.
+
+
+
+
+
+
+Zhou                    Expires 3 September 2026                [Page 8]
+
+Internet-Draft                     SNS                        March 2026
+
+
+   When composing skills across domains, agents SHOULD clearly
+   communicate to the user that the trust context is being extended to
+   additional domains.
+
+7.  Security Considerations
+
+   The primary security property of this protocol is that trust is
+   anchored to domain ownership.  This inherits both the strengths and
+   weaknesses of the existing Web PKI and DNS infrastructure.
+
+   Skill spoofing is mitigated by the HTTPS requirement, which ensures
+   that only the legitimate operator of a domain can serve skills from
+   that domain.  DNSSEC (Section 5.3) provides an additional layer of
+   protection against DNS-level attacks.
+
+   Agents implementing this protocol should be aware of the following
+   risks:
+
+   *  Domain compromise: If a domain is compromised, all skills served
+      from it should be considered compromised.
+
+   *  Subdomain delegation: Skills on subdomains should be treated as
+      distinct trust contexts from the parent domain.
+
+   *  Transitive trust in composition: When skills reference other
+      skills (Section 6), the trust chain extends across domains.
+      Agents should clearly communicate this to users.
+
+   *  Script execution: Bundled scripts execute with the permissions of
+      the agent's runtime environment.  Malicious scripts could perform
+      unauthorized file access, network calls, or data exfiltration.
+      The Explicit Consent requirement (Section 5.2) mitigates this
+      risk, but agents SHOULD also sandbox script execution where
+      possible.
+
+   *  External resource fetching: Skills that instruct agents to fetch
+      data from external URLs pose particular risk, as fetched content
+      may contain malicious instructions.  Agents SHOULD treat
+      externally-fetched content as untrusted.
+
+8.  IANA Considerations
+
+   This document requests registration of the well-known URI suffix
+   skills in the "Well-Known URIs" registry established by [RFC8615].
+
+   URI suffix:  skills
+
+   Change controller:  Namefi
+
+
+
+Zhou                    Expires 3 September 2026                [Page 9]
+
+Internet-Draft                     SNS                        March 2026
+
+
+   Specification document:  This document (Section 3.2)
+
+9.  References
+
+9.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -317,7 +539,7 @@ Internet-Draft                     SNS                        March 2026
               DOI 10.17487/RFC9110, June 2022,
               <https://www.rfc-editor.org/rfc/rfc9110>.
 
-5.2.  Informative References
+9.2.  Informative References
 
    [CLAUDE-SKILLS]
               Anthropic, "Agent Skills Overview", n.d.,
@@ -327,21 +549,18 @@ Internet-Draft                     SNS                        March 2026
    [SITEMAP]  Sitemaps.org, "Sitemaps XML Format", n.d.,
               <https://www.sitemaps.org/protocol.html>.
 
-
-
-
-
-
-
-Zhou                    Expires 3 September 2026                [Page 6]
-
-Internet-Draft                     SNS                        March 2026
-
-
 Acknowledgments
 
    The authors would like to thank the broader AI agent community for
    discussions that informed this protocol design.
+
+
+
+
+Zhou                    Expires 3 September 2026               [Page 10]
+
+Internet-Draft                     SNS                        March 2026
+
 
 Author's Address
 
@@ -389,4 +608,9 @@ Author's Address
 
 
 
-Zhou                    Expires 3 September 2026                [Page 7]
+
+
+
+
+
+Zhou                    Expires 3 September 2026               [Page 11]
