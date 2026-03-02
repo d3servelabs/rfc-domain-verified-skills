@@ -47,7 +47,7 @@ specific behavior.
 
 The central design principle of DVS is that a skill's identity and
 trustworthiness are derived entirely from the HTTPS URL at which it
-is served — no centralized registry or third-party certification is
+is served -- no centralized registry or third-party certification is
 required.  The operator of the URL's origin is the authoritative
 endorser of the skill.
 
@@ -220,16 +220,16 @@ purpose:
 
 ~~~
 my-skill/
-├── SKILL.md              (entry point - REQUIRED)
-├── ADVANCED.md           (additional instructions - OPTIONAL)
-├── REFERENCE.md          (detailed reference docs - OPTIONAL)
-├── scripts/
-│   ├── process.py        (executable script - OPTIONAL)
-│   └── validate.sh       (executable script - OPTIONAL)
-├── templates/
-│   └── report.html       (template file - OPTIONAL)
-└── data/
-    └── schema.json       (data/reference file - OPTIONAL)
++-- SKILL.md              (entry point - REQUIRED)
++-- ADVANCED.md           (additional instructions - OPTIONAL)
++-- REFERENCE.md          (detailed reference docs - OPTIONAL)
++-- scripts/
+|   +-- process.py        (executable script - OPTIONAL)
+|   +-- validate.sh       (executable script - OPTIONAL)
++-- templates/
+|   +-- report.html       (template file - OPTIONAL)
++-- data/
+    +-- schema.json       (data/reference file - OPTIONAL)
 ~~~
 
 When served over HTTPS, the directory structure is represented by

@@ -1,18 +1,25 @@
-DRAFT = draft-zhou-dvs-00
+DRAFT = draft-zhou-dvs-01
 SHELL = /bin/bash
+GENDIR = gen
 
 # Source chruby to find kramdown-rfc installed under ruby 3.3.0
 CHRUBY_INIT = source /opt/homebrew/opt/chruby/share/chruby/chruby.sh 2>/dev/null && chruby ruby-3.3.0 2>/dev/null;
 
-.PHONY: all clean
+.PHONY: all lint clean
 
-all: $(DRAFT).txt
+all: $(GENDIR)/$(DRAFT).txt
 
-$(DRAFT).xml: $(DRAFT).md
-	$(CHRUBY_INIT) kramdown-rfc $(DRAFT).md > $(DRAFT).xml
+$(GENDIR):
+	mkdir -p $(GENDIR)
 
-$(DRAFT).txt: $(DRAFT).xml
-	xml2rfc --text $(DRAFT).xml -o $(DRAFT).txt
+$(GENDIR)/$(DRAFT).xml: $(DRAFT).md | $(GENDIR)
+	$(CHRUBY_INIT) kramdown-rfc $(DRAFT).md > $(GENDIR)/$(DRAFT).xml
+
+$(GENDIR)/$(DRAFT).txt: $(GENDIR)/$(DRAFT).xml
+	xml2rfc --text $(GENDIR)/$(DRAFT).xml -o $(GENDIR)/$(DRAFT).txt
+
+lint: $(GENDIR)/$(DRAFT).xml
+	npx @ietf-tools/idnits $(GENDIR)/$(DRAFT).xml
 
 clean:
-	rm -f $(DRAFT).xml $(DRAFT).txt
+	rm -rf $(GENDIR)
