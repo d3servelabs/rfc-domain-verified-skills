@@ -2,7 +2,7 @@
 
 An IETF Internet-Draft defining the Domain-Verified Skills (DVS) protocol — a lightweight mechanism for AI agents to discover, verify, and execute skill definitions served over HTTPS.
 
-**Draft:** `draft-zzn-dvs-00`
+**Draft:** `draft-zzn-dvs` (run `make version` for the current revision)
 **Author:** Zainan Victor Zhou (Namefi)
 **Category:** Informational
 
@@ -21,12 +21,13 @@ The protocol reuses existing DNS and TLS trust infrastructure and is backward-co
 
 | File | Description |
 |------|-------------|
-| `draft-zzn-dvs-00.md` | Source document (kramdown-rfc Markdown) |
-| `draft-zzn-dvs-00.xml` | Generated RFCXML |
-| `draft-zzn-dvs-00.txt` | Generated plain-text RFC output |
+| `draft-zzn-dvs.md` | Source document (kramdown-rfc Markdown) |
+| `gen/draft-zzn-dvs-XX.xml` | Generated RFCXML (in `gen/`) |
+| `gen/draft-zzn-dvs-XX.txt` | Generated plain-text RFC output (in `gen/`) |
 | `Makefile` | Build toolchain |
 | `setup.sh` | Dependency setup script |
 | `pre-commit-hook.sh` | Git pre-commit hook for auto-building |
+| `KNOWN_ISSUES.md` | Known tooling issues and workarounds |
 
 ## Building
 
@@ -45,11 +46,28 @@ Run the setup script to install dependencies:
 ### Build
 
 ```sh
-make          # produces draft-zzn-dvs-00.txt
+make          # produces gen/draft-zzn-dvs-XX.txt
 make clean    # remove generated files
 ```
 
-The build pipeline: `draft-zzn-dvs-00.md` → `draft-zzn-dvs-00.xml` → `draft-zzn-dvs-00.txt`
+The build pipeline: `draft-zzn-dvs.md` → `gen/draft-zzn-dvs-XX.xml` → `gen/draft-zzn-dvs-XX.txt`
+
+### Versioning and Tagging
+
+The draft revision number is managed via `REVISION` in the Makefile.
+
+```sh
+make version   # print current draft identifier (e.g. draft-zzn-dvs-00)
+make tag       # create an annotated git tag for the current revision
+make bump      # increment REVISION (e.g. 00 → 01)
+```
+
+Typical release workflow:
+
+1. Finalize work on the current revision
+2. `make tag` — tags the current commit (e.g. `draft-zzn-dvs-00`)
+3. `make bump` — updates `REVISION` in the Makefile for the next iteration
+4. Commit the bumped Makefile
 
 ### Auto-build on commit
 

@@ -7,9 +7,25 @@ GENDIR     = gen
 # Source chruby to find kramdown-rfc installed under ruby 3.3.0
 CHRUBY_INIT = source /opt/homebrew/opt/chruby/share/chruby/chruby.sh 2>/dev/null && chruby ruby-3.3.0 2>/dev/null;
 
-.PHONY: all lint clean
+.PHONY: all lint clean version tag bump
 
 all: $(GENDIR)/$(DRAFT).txt
+
+version:
+	@echo "$(DRAFT)"
+
+tag:
+	@if git rev-parse "$(DRAFT)" >/dev/null 2>&1; then \
+		echo "Tag $(DRAFT) already exists"; exit 1; \
+	fi
+	git tag -a "$(DRAFT)" -m "Release $(DRAFT)"
+	@echo "Tagged $(DRAFT)"
+
+bump:
+	@NEXT=$$(printf '%02d' $$(( 10#$(REVISION) + 1 ))); \
+	echo "Bumping $(DRAFT_BASE)-$(REVISION) → $(DRAFT_BASE)-$$NEXT"; \
+	sed -i '' "s/^REVISION   = $(REVISION)/REVISION   = $$NEXT/" Makefile; \
+	echo "Updated REVISION to $$NEXT in Makefile"
 
 $(GENDIR):
 	mkdir -p $(GENDIR)
